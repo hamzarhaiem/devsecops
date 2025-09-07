@@ -1,19 +1,18 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-    stage('Build Artifact - Maven') {
-      steps {
-        script {
-          if (isUnix()) {
-            sh 'mvn clean package -DskipTests=true'
-          } else {
-            bat 'mvn clean package -DskipTests=true'
-          }
+    stages {
+        stage('Build Artifact - Maven') {
+            steps {
+                sh "mvn clean package -DskipTests=true"
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
         }
-        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-        //Test the webhook
-      }
+
+        stage('Unit Tests') {
+            steps {
+                sh "mvn test"
+            }
+        }
     }
-  }
 }
