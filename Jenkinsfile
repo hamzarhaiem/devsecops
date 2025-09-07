@@ -1,11 +1,18 @@
-stages {
+pipeline {
   agent any
+
   stages {
-     stage('Build Artifact - Maven') {
-       steps {
-         sh "mvn clean package -DskipTests=true"
-         archive 'target/*.jar'
-       }
-     }
+    stage('Build Artifact - Maven') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'mvn clean package -DskipTests=true'
+          } else {
+            bat 'mvn clean package -DskipTests=true'
+          }
+        }
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+      }
+    }
   }
 }
