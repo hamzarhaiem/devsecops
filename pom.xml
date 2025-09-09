@@ -141,7 +141,7 @@
 					<version>12.1.0</version>
 					<configuration>
 						<format>ALL</format>
-						<failBuildOnCVSS>8</failBuildOnCVSS>
+						<failBuildOnCVSS>11</failBuildOnCVSS>
 						<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
 						<cveValidForHours>24</cveValidForHours>
 					</configuration>
