@@ -36,25 +36,27 @@ pipeline {
        }
      }
 
-    // stage('Vulnerability Scan - Docker') {
-    //     steps {
-    //         sh 'mvn dependency-check:check'
-    //     }
-    //     post {
-    //         always {
-    //             dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-    //         }
-    //     }
-    // }
-
-
-        stage('Vulnerability Scan - Maven') {
-        steps {
-            withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-            sh 'mvn -DskipTests org.owasp:dependency-check-maven:12.1.0:check -DnvdApiKey=$NVD_API_KEY'
+    stage('Vulnerability Scan') {
+    parallel {
+        stage('Dependency Scan - Maven') {
+            steps {
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    sh 'mvn -DskipTests org.owasp:dependency-check-maven:12.1.0:check -DnvdApiKey=$NVD_API_KEY'
+                }
+            }
+            post {
+                always {
+                    dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+                }
             }
         }
+        stage('Trivy Scan - Docker') {
+            steps {
+                sh 'bash trivy-docker-image-scan.sh'
+            }
         }
+    }
+}
 
     stage('Docker Build and Push') {
             steps {
