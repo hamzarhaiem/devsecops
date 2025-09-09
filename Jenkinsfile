@@ -48,16 +48,30 @@ pipeline {
        }
      }
 
-    stage('Vulnerability Scan - Docker') {
+    // stage('Vulnerability Scan - Docker') {
+    //     steps {
+    //         sh 'mvn dependency-check:check'
+    //     }
+    //     post {
+    //         always {
+    //             dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+    //         }
+    //     }
+    // }
+
+
+        stage('Vulnerability Scan - Maven') {
         steps {
-            sh 'mvn dependency-check:check'
+            withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+            sh 'mvn -DskipTests org.owasp:dependency-check-maven:12.1.0:check -DnvdApiKey=$NVD_API_KEY'
+            }
         }
         post {
             always {
-                dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+            dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
             }
         }
-    }
+        }
 
     stage('Docker Build and Push') {
             steps {
