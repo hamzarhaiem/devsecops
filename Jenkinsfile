@@ -13,23 +13,11 @@ pipeline {
             steps {
                 sh "mvn test"
             }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                    jacoco execPattern: 'target/jacoco.exec'
-                }
-            }
         }
 
     stage('Mutation Tests - PIT') {
       steps {
         sh 'mvn org.pitest:pitest-maven:mutationCoverage'
-      }
-      post {
-        always {
-          // nécessite le plugin "PIT Mutation"
-          pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
-        }
       }
     }
 
@@ -66,11 +54,6 @@ pipeline {
             sh 'mvn -DskipTests org.owasp:dependency-check-maven:12.1.0:check -DnvdApiKey=$NVD_API_KEY'
             }
         }
-        post {
-            always {
-            dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-            }
-        }
         }
 
     stage('Docker Build and Push') {
@@ -90,6 +73,15 @@ pipeline {
                     sh 'kubectl apply -f k8s_deployment_service.yaml'
                 }
             }
+        }
+    }
+
+      post { 
+        always { 
+            junit 'target/surefire-reports/*.xml'
+            jacoco execPattern: 'target/jacoco.exec'
+            pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
+            dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
         }
     }
 }
