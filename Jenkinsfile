@@ -3,13 +3,12 @@ pipeline {
 
   environment {
     deploymentName = "devsecops"
-    containerName = "devsecops-container"
-    serviceName = "devsecops-svc"
-    imageName = "hamzarhaiem/numeric-app:${GIT_COMMIT}"
-    applicationURL="http://devsecops-bloody-demo.eastus.cloudapp.azure.com"
-    applicationURI="/increment/99"
+    containerName  = "devsecops-container"
+    serviceName    = "devsecops-svc"
+    imageName      = "hamzarhaiem/numeric-app:${GIT_COMMIT}"
+    applicationURL = "http://devsecops-bloody-demo.eastus.cloudapp.azure.com"
+    applicationURI = "/increment/99"
   }
-
 
   stages {
     stage('Build Artifact - Maven') {
@@ -41,9 +40,7 @@ pipeline {
           """
         }
         timeout(time: 2, unit: 'MINUTES') {
-          script {
-            waitForQualityGate abortPipeline: true
-          }
+          script { waitForQualityGate abortPipeline: true }
         }
       }
     }
@@ -71,7 +68,6 @@ pipeline {
 
         stage('OPA Scan - Docker') {
           steps {
-            // Run conftest against your Dockerfile using the rego policy
             sh "docker run --rm -v \$(pwd):/project -w /project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile"
           }
         }
@@ -88,46 +84,35 @@ pipeline {
       }
     }
 
-
     stage('Vulnerability Scan - Kubernetes - OPA') {
-       steps {
-         parallel(
-           "OPA Scan": {
-             sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
-           }
-         )
-       }
-     }
-
-  //   stage('Kubernetes Deployment - DEV') {
-  //     steps {
-  //       withKubeConfig([credentialsId: 'kubeconfig']) {
-  //         sh "sed -i 's#replace#hamzarhaiem/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
-  //         sh 'kubectl apply -f k8s_deployment_service.yaml'
-  //       }
-  //     }
-  //   }
-  // }
+      parallel {
+        stage('OPA Scan') {
+          steps {
+            sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
+          }
+        }
+      }
+    }
 
     stage('K8S Deployment - DEV') {
-        parallel {
-          stage('Deployment') {
-            steps {
-              withKubeConfig([credentialsId: 'kubeconfig']) {
-                sh "bash k8s-deployment.sh"
-              }
+      parallel {
+        stage('Deployment') {
+          steps {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              sh "bash k8s-deployment.sh"
             }
           }
-          stage('Rollout Status') {
-            steps {
-              withKubeConfig([credentialsId: 'kubeconfig']) {
-                sh "bash k8s-deployment-rollout-status.sh"
-              }
+        }
+        stage('Rollout Status') {
+          steps {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              sh "bash k8s-deployment-rollout-status.sh"
             }
           }
         }
       }
-
+    }
+  } // <-- close stages
 
   post {
     always {
