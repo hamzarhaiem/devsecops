@@ -94,7 +94,6 @@ pipeline {
         stage('Kubesec Scan') {
           steps {
             sh "bash kubesec-scan.sh"
-            }
           }
         }
       }
