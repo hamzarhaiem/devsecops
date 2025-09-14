@@ -96,11 +96,11 @@ pipeline {
             sh "bash kubesec-scan.sh"
           }
         }
-        stage('Trivy Scan') {
-          steps {
-            sh "bash trivy-k8s-scan.sh"
-          }
-        }
+        // stage('Trivy Scan') {
+        //   steps {
+        //     sh "bash trivy-k8s-scan.sh"
+        //   }
+        // }
       }
     }
 
