@@ -45,7 +45,7 @@ pipeline {
       }
     }
 
-    stage('Vulnerability Scan') {
+    stage('Vulnerability Scan Maven OWASP') {
       parallel {
         stage('Dependency Scan - Maven') {
           steps {
@@ -94,6 +94,11 @@ pipeline {
         stage('Kubesec Scan') {
           steps {
             sh "bash kubesec-scan.sh"
+          }
+        }
+        stage('Trivy Scan') {
+          steps {
+            sh "bash trivy-k8s-scan.sh"
           }
         }
       }
